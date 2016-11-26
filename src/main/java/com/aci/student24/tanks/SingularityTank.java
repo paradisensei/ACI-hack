@@ -31,6 +31,7 @@ public class SingularityTank implements Algorithm {
         List<Tank> tanks = mapState.getTanks(teamId);
         if (firstRun) {
             leftResp = tanks.get(0).getX() < MAX_X / 2;
+            firstRun = false;
         }
         Tank first = getFirst(tanks);
         Tank second = getSecond(tanks);
@@ -59,6 +60,14 @@ public class SingularityTank implements Algorithm {
             tankMoves.add(new TankMove(second.getId(), (byte) 1, true));
         }
         return tankMoves;
+    }
+
+    private List<TankMove> moveSpecial(Tank first, Tank second) {
+
+    }
+
+    private List<TankMove> moveCommon(List<Tank> tanks) {
+
     }
 
     private Tank getFirst(List<Tank> tanks) {
