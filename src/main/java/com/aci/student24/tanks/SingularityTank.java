@@ -38,6 +38,14 @@ public class SingularityTank implements Algorithm {
         // remove special tanks
         tanks.removeIf(t -> t.getId() == first.getId());
         tanks.removeIf(t -> t.getId() == second.getId());
+        // get moves
+        List<TankMove> tankMovesSpecial = moveSpecial(first, second);
+        List<TankMove> tankMovesCommon = moveCommon(tanks);
+        tankMovesCommon.addAll(tankMovesSpecial);
+        return tankMovesCommon;
+    }
+
+    private void staff() {
         //TODO ebash!!!
         List<TankMove> tankMoves = new ArrayList<>();
         List<Tank> didntDoAnything;
