@@ -59,49 +59,92 @@ public class SingularityTank implements Algorithm {
         return tankMoves;
     }
 
+    private byte getFirstSpecialDir(Tank tank) {
+        if (leftResp) {
+            int nextX = tank.getX() + 1;
+            // if there is no obstacle to the right
+            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+                return Direction.RIGHT;
+            } else if (!upperBound(nextX, tank.getY())) {
+                return Direction.UP;
+            } else if (!lowerBound(nextX, tank.getY())) {
+                return Direction.DOWN;
+            } else {
+                return Direction.LEFT;
+            }
+        } else {
+            int nextX = tank.getX() - 1;
+            // if there is no obstacle to the left
+            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+                return Direction.LEFT;
+            } else if (!lowerBound(nextX, tank.getY())) {
+                return Direction.DOWN;
+            } else if (!upperBound(nextX, tank.getY())) {
+                return Direction.UP;
+            } else {
+                return Direction.RIGHT;
+            }
+        }
+    }
+
+    private byte getSecondSpecialDir(Tank tank) {
+        if (leftResp) {
+            int nextX = tank.getX() + 1;
+            // if there is no obstacle to the right
+            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+                return Direction.RIGHT;
+            } else if (!lowerBound(nextX, tank.getY())) {
+                return Direction.DOWN;
+            } else if (!upperBound(nextX, tank.getY())) {
+                return Direction.UP;
+            }  else {
+                return Direction.LEFT;
+            }
+        } else {
+            int nextX = tank.getX() - 1;
+            // if there is no obstacle to the left
+            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+                return Direction.LEFT;
+            } else if (!upperBound(nextX, tank.getY())) {
+                return Direction.UP;
+            } else if (!lowerBound(nextX, tank.getY())) {
+                return Direction.DOWN;
+            } else {
+                return Direction.RIGHT;
+            }
+        }
+    }
+
     private List<TankMove> moveCommon(List<Tank> tanks) {
         return tanks.stream()
                 .map(tank -> new TankMove(tank.getId(), getCommonDir(tank), true))
                 .collect(Collectors.toList());
     }
 
-    private byte getFirstSpecialDir(Tank tank) {
-        if (leftResp) {
-
-        } else {
-
-        }
-    }
-
-    private byte getSecondSpecialDir(Tank tank) {
-        if (leftResp) {
-
-        } else {
-
-        }
-    }
-
     private byte getCommonDir(Tank tank) {
         if (leftResp) {
+            int nextX = tank.getX() + 1;
             // if there is no obstacle to the right
-            //TODO циклится
-            if (!positionsOfIndestructibles.contains(new Position(tank.getX() + 1, tank.getY()))) {
+            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
                 return Direction.RIGHT;
-                // if there is no obstacle to the bottom
-            } else if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() + 1))) {
+            } else if (!lowerBound(nextX, tank.getY())) {
                 return Direction.DOWN;
-            } else {
+            } else if (!upperBound(nextX, tank.getY())) {
                 return Direction.UP;
+            } else {
+                return Direction.LEFT;
             }
         } else {
-            // if there is no obstacle to the left
-            if (!positionsOfIndestructibles.contains(new Position(tank.getX() - 1, tank.getY()))) {
+            int nextX = tank.getX() - 1;
+            // if there is no obstacle to the right
+            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
                 return Direction.LEFT;
-                // if there is no obstacle to the upper
-            } else if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() - 1))) {
+            } else if (!lowerBound(nextX, tank.getY())) {
+                return Direction.DOWN;
+            } else if (!upperBound(nextX, tank.getY())) {
                 return Direction.UP;
             } else {
-                return Direction.DOWN;
+                return Direction.LEFT;
             }
         }
     }
