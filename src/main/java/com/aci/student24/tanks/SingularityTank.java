@@ -58,8 +58,10 @@ public class SingularityTank implements Algorithm {
 
     private List<TankMove> moveSpecial(Tank first, Tank second) {
         List<TankMove> tankMoves = new ArrayList<>();
-        tankMoves.add(new TankMove(first.getId(), getFirstSpecialDir(first), true));
-        tankMoves.add(new TankMove(second.getId(), getSecondSpecialDir(second), true));
+        byte dir = getFirstSpecialDir(first);
+        tankMoves.add(new TankMove(first.getId(), dir, shoot(first, dir)));
+        dir = getSecondSpecialDir(second);
+        tankMoves.add(new TankMove(second.getId(), dir, shoot(second, dir)));
         return tankMoves;
     }
 
@@ -157,7 +159,40 @@ public class SingularityTank implements Algorithm {
     }
 
     private boolean shoot(Tank tank, byte dir) {
-
+        int x = tank.getX();
+        int y = tank.getY();
+        boolean found;
+        switch (dir) {
+            case Direction.LEFT:
+                found = allTanks.stream()
+                        .filter(t -> t.getY() == y && t.getX() < x)
+                        .findAny().isPresent();
+                if (found) {
+                    return false;
+                }
+            case Direction.UP:
+                found = allTanks.stream()
+                        .filter(t -> t.getX() == x && t.getY() < y)
+                        .findAny().isPresent();
+                if (found) {
+                    return false;
+                }
+            case Direction.RIGHT:
+                found = allTanks.stream()
+                        .filter(t -> t.getY() == y && t.getX() > x)
+                        .findAny().isPresent();
+                if (found) {
+                    return false;
+                }
+            case Direction.DOWN:
+                found = allTanks.stream()
+                        .filter(t -> t.getX() == x && t.getY() > y)
+                        .findAny().isPresent();
+                if (found) {
+                    return false;
+                }
+        }
+        return true;
     }
     
     // true, if upper bound exists
