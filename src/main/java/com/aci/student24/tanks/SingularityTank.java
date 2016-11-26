@@ -26,6 +26,8 @@ public class SingularityTank implements Algorithm {
     private MapState mapState;
     private List<Position> positionsOfIndestructibles;
     private List<Tank> allTanks;
+    private List<Tank> lastColumnTanks = new ArrayList<>();
+
 
     @Override
     public void setMyId(int id) {
@@ -37,6 +39,7 @@ public class SingularityTank implements Algorithm {
         this.mapState = mapState;
         List<Tank> tanks = mapState.getTanks(teamId);
         allTanks = new ArrayList<>(tanks);
+
         if (firstRun) {
             leftResp = tanks.get(0).getX() < MAX_X / 2;
             firstRun = false;
@@ -44,16 +47,32 @@ public class SingularityTank implements Algorithm {
                     .map(Position::getPosition)
                     .collect(Collectors.toList());
         }
-        Tank first = getFirst(tanks);
-        Tank second = getSecond(tanks);
-        // remove special tanks
-        tanks.removeIf(t -> t.getId() == first.getId());
-        tanks.removeIf(t -> t.getId() == second.getId());
-        // get moves
-        List<TankMove> tankMovesSpecial = moveSpecial(first, second);
-        List<TankMove> tankMovesCommon = moveCommon(tanks);
-        tankMovesCommon.addAll(tankMovesSpecial);
-        return tankMovesCommon;
+
+        List<TankMove> resultingMoves = new ArrayList<>();
+
+        if(!lastColumnTanks.isEmpty()) {
+            tanks.remove(lastColumnTanks);
+            List<TankMove> tankMovesLastColumn = moveLastColumnTanks(lastColumnTanks);
+
+            resultingMoves.addAll(tankMovesLastColumn);
+        }
+
+
+        if(!tanks.isEmpty()) {
+            Tank first = getFirst(tanks);
+            Tank second = getSecond(tanks);
+            // remove special tanks
+            tanks.removeIf(t -> t.getId() == first.getId());
+            tanks.removeIf(t -> t.getId() == second.getId());
+
+            // get moves
+            List<TankMove> tankMovesSpecial = moveSpecial(first, second);
+            List<TankMove> tankMovesCommon = moveCommon(tanks);
+
+            resultingMoves.addAll(tankMovesSpecial);
+            resultingMoves.addAll(tankMovesCommon);
+        }
+        return resultingMoves;
     }
 
     private List<TankMove> moveSpecial(Tank first, Tank second) {
@@ -156,6 +175,10 @@ public class SingularityTank implements Algorithm {
                 return Direction.LEFT;
             }
         }
+    }
+
+    private List<TankMove> moveLastColumnTanks(List<Tank> tanks) {
+
     }
 
     private boolean shoot(Tank tank, byte dir) {
