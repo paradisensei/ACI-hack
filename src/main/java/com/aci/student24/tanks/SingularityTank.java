@@ -29,10 +29,12 @@ public class SingularityTank implements Algorithm {
     @Override
     public List<TankMove> nextMoves(MapState mapState) {
         List<Tank> tanks = mapState.getTanks(teamId);
+
         if (firstRun) {
             leftResp = tanks.get(0).getX() < MAX_X / 2;
-            tanks.forEach(t -> oldPos.put(t.getId(), t.getPosition()));
             firstRun = false;
+
+            storePositions(tanks);
         }
         Tank first = getFirst(tanks);
         Tank second = getSecond(tanks);
@@ -69,12 +71,20 @@ public class SingularityTank implements Algorithm {
         return tankMoves;
     }
 
+    private void storePositions(List<Tank> tanks) {
+        tanks.forEach(t -> oldPos.put(t.getId(), t.getPosition()));
+    }
+
     private List<TankMove> moveSpecial(Tank first, Tank second) {
 
     }
 
     private List<TankMove> moveCommon(List<Tank> tanks) {
+        tanks.stream().map(tank -> new TankMove(tank.getId(), getCommonDir(tank), true )).collect(Collectors.toList());
+    }
 
+    private byte getCommonDir(Tank tank) {
+        tank.getPosition()
     }
 
     private Tank getFirst(List<Tank> tanks) {
