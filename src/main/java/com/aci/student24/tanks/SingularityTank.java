@@ -25,6 +25,7 @@ public class SingularityTank implements Algorithm {
     private boolean leftResp = false;
     private MapState mapState;
     private List<Position> positionsOfIndestructibles;
+    private List<Tank> allTanks;
 
     @Override
     public void setMyId(int id) {
@@ -35,6 +36,7 @@ public class SingularityTank implements Algorithm {
     public List<TankMove> nextMoves(MapState mapState) {
         this.mapState = mapState;
         List<Tank> tanks = mapState.getTanks(teamId);
+        allTanks = new ArrayList<>(tanks);
         if (firstRun) {
             leftResp = tanks.get(0).getX() < MAX_X / 2;
             firstRun = false;
@@ -119,7 +121,10 @@ public class SingularityTank implements Algorithm {
 
     private List<TankMove> moveCommon(List<Tank> tanks) {
         return tanks.stream()
-                .map(tank -> new TankMove(tank.getId(), getCommonDir(tank), true))
+                .map(tank -> {
+                    byte dir = getCommonDir(tank);
+                    return new TankMove(tank.getId(), dir, shoot(tank, dir));
+                })
                 .collect(Collectors.toList());
     }
 
@@ -149,6 +154,10 @@ public class SingularityTank implements Algorithm {
                 return Direction.LEFT;
             }
         }
+    }
+
+    private boolean shoot(Tank tank, byte dir) {
+
     }
     
     // true, if upper bound exists
