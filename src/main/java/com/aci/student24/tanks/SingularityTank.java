@@ -174,8 +174,13 @@ public class SingularityTank implements Algorithm {
             }
         }
     }
+    // true, if upper bound exists
+    private boolean upperBound(int x, int y) {
+        
+    }
 
-    private boolean[] anyBounds(int x, int y) {
+    // true, if lower bound exists
+    private boolean lowerBound(int x, int y) {
 
     }
 
