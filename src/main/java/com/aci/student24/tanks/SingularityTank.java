@@ -7,10 +7,7 @@ import com.aci.student24.api.tanks.state.Direction;
 import com.aci.student24.api.tanks.state.MapState;
 import com.aci.student24.api.tanks.state.TankMove;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +23,7 @@ public class SingularityTank implements Algorithm {
     private MapState mapState;
     private List<Position> positionsOfIndestructibles;
     private List<Tank> allTanks;
+    private Set<Integer> lastColumnTanksIds;
 
 
     @Override
@@ -45,20 +43,21 @@ public class SingularityTank implements Algorithm {
             positionsOfIndestructibles = mapState.getIndestructibles().stream()
                     .map(Position::getPosition)
                     .collect(Collectors.toList());
+            lastColumnTanksIds = new HashSet<>();
         }
 
         List<TankMove> resultingMoves = new ArrayList<>();
 
-        List<Tank> lastColumnTanks = new ArrayList<>();
-
-        fillUpLastColumnTanks(lastColumnTanks);
+        fillUpLastColumnTanks();
+        List<Tank> lastColumnTanks = allTanks.stream()
+                .filter(t -> lastColumnTanksIds.contains(t.getId()))
+                .collect(Collectors.toList());
 
         if (!lastColumnTanks.isEmpty()) {
             tanks.removeAll(lastColumnTanks);
             List<TankMove> tankMovesLastColumn = moveLastColumnTanks(lastColumnTanks);
             resultingMoves.addAll(tankMovesLastColumn);
         }
-
 
         if (!tanks.isEmpty()) {
             Tank first = getFirst(tanks);
@@ -81,8 +80,10 @@ public class SingularityTank implements Algorithm {
         List<TankMove> tankMoves = new ArrayList<>();
         byte dir = getFirstSpecialDir(first);
         tankMoves.add(new TankMove(first.getId(), dir, shoot(first, dir)));
+//        tankMoves.add(new TankMove(first.getId(), dir, true));
         dir = getSecondSpecialDir(second);
         tankMoves.add(new TankMove(second.getId(), dir, shoot(second, dir)));
+//        tankMoves.add(new TankMove(second.getId(), dir, true));
         return tankMoves;
     }
 
@@ -147,6 +148,7 @@ public class SingularityTank implements Algorithm {
                 .map(tank -> {
                     byte dir = getCommonDir(tank);
                     return new TankMove(tank.getId(), dir, shoot(tank, dir));
+//                    return new TankMove(tank.getId(), dir, true);
                 })
                 .collect(Collectors.toList());
     }
@@ -157,7 +159,7 @@ public class SingularityTank implements Algorithm {
             // if there is no obstacle to the right
             if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
                 return Direction.RIGHT;
-            } else if (!lowerBound(nextX, tank.getY())) {
+            } else if (!lowerBound(nextX, tank.getY()) && !lowerCorner(tank)) {
                 return Direction.DOWN;
             } else if (!upperBound(nextX, tank.getY())) {
                 return Direction.UP;
@@ -179,14 +181,72 @@ public class SingularityTank implements Algorithm {
         }
     }
 
-    private void fillUpLastColumnTanks(List<Tank> lastColumnTanks) {
+    private boolean lowerCorner(Tank tank) {
+        Optional<Position> lowIndOpt = positionsOfIndestructibles.stream()
+                .filter(ind -> tank.getX() == ind.getX()
+                        && ind.getY() > tank.getY()).min((o1, o2) -> {
+                    if (o1.getY() < o2.getY()) {
+                        return -1;
+                    }
+                    if (o1.getY() > o2.getY()) {
+                        return 1;
+                    }
+                    return 0;
+                });
+        if (!lowIndOpt.isPresent()) {
+            return false;
+        }
+        Position lowInd = lowIndOpt.get();
+        Optional<Position> lowRightIndOpt = positionsOfIndestructibles.stream()
+                .filter(ind -> lowInd.getX() + 1 == ind.getX() && lowInd.getY() == ind.getY())
+                .findAny();
+        if (!lowRightIndOpt.isPresent()) {
+            return false;
+        }
+        Position lowRightInd = lowRightIndOpt.get();
+        Optional<Position> lowRightUpperIndOpt = positionsOfIndestructibles.stream()
+                .filter(ind -> lowRightInd.getX() == ind.getX() && lowRightInd.getY() - 1 == ind.getY())
+                .findAny();
+        return lowRightUpperIndOpt.isPresent();
+    }
+
+    private boolean upperCorner(Tank tank) {
+        Optional<Position> upIndOpt = positionsOfIndestructibles.stream()
+                .filter(ind -> tank.getX() == ind.getX()
+                        && ind.getY() < tank.getY()).max((o1, o2) -> {
+                    if (o1.getY() < o2.getY()) {
+                        return -1;
+                    }
+                    if (o1.getY() > o2.getY()) {
+                        return 1;
+                    }
+                    return 0;
+                });
+        if (!upIndOpt.isPresent()) {
+            return false;
+        }
+        Position upInd = upIndOpt.get();
+        Optional<Position> upLeftIndOpt = positionsOfIndestructibles.stream()
+                .filter(ind -> upInd.getX() - 1 == ind.getX() && upInd.getY() == ind.getY())
+                .findAny();
+        if (!upLeftIndOpt.isPresent()) {
+            return false;
+        }
+        Position upLeftInd = upLeftIndOpt.get();
+        Optional<Position> upLeftBottomIndOpt = positionsOfIndestructibles.stream()
+                .filter(ind -> upLeftInd.getX() == ind.getX() && upLeftInd.getY() + 1 == ind.getY())
+                .findAny();
+        return upLeftBottomIndOpt.isPresent();
+    }
+
+    private void fillUpLastColumnTanks() {
         allTanks.forEach(tank -> {
             if (leftResp) {
                 if (tank.getX() == (MAX_X - 1))
-                    lastColumnTanks.add(tank);
+                    lastColumnTanksIds.add(tank.getId());
             } else {
                 if (tank.getX() == 0) {
-                    lastColumnTanks.add(tank);
+                    lastColumnTanksIds.add(tank.getId());
                 }
             }
         });
@@ -198,11 +258,16 @@ public class SingularityTank implements Algorithm {
                     .map(t -> {
                         byte dir = getLastColumnDir(t);
                         return new TankMove(t.getId(), dir, shoot(t, dir));
+//                        return new TankMove(t.getId(), dir, true);
+
                     })
                     .collect(Collectors.toList());
         } else {
             return tanks.stream()
-                    .map(t -> new TankMove(t.getId(), Direction.UP, shoot(t, Direction.UP)))
+                    .map(t -> {
+                        byte dir = getLastColumnDir(t);
+                        return new TankMove(t.getId(), dir, true);
+                    })
                     .collect(Collectors.toList());
         }
     }
@@ -256,6 +321,7 @@ public class SingularityTank implements Algorithm {
                 if (found) {
                     return false;
                 }
+                break;
             case Direction.UP:
                 found = allTanks.stream()
                         .filter(t -> t.getX() == x && t.getY() < y)
@@ -263,6 +329,7 @@ public class SingularityTank implements Algorithm {
                 if (found) {
                     return false;
                 }
+                break;
             case Direction.RIGHT:
                 found = allTanks.stream()
                         .filter(t -> t.getY() == y && t.getX() > x)
@@ -270,6 +337,7 @@ public class SingularityTank implements Algorithm {
                 if (found) {
                     return false;
                 }
+                break;
             case Direction.DOWN:
                 found = allTanks.stream()
                         .filter(t -> t.getX() == x && t.getY() > y)
@@ -277,6 +345,7 @@ public class SingularityTank implements Algorithm {
                 if (found) {
                     return false;
                 }
+                break;
         }
         return true;
     }
