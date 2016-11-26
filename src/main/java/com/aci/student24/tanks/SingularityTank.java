@@ -1,14 +1,16 @@
 package com.aci.student24.tanks;
 
 import com.aci.student24.api.tanks.Algorithm;
-import com.aci.student24.api.tanks.objects.Indestructible;
 import com.aci.student24.api.tanks.objects.Position;
 import com.aci.student24.api.tanks.objects.Tank;
 import com.aci.student24.api.tanks.state.Direction;
 import com.aci.student24.api.tanks.state.MapState;
 import com.aci.student24.api.tanks.state.TankMove;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -151,12 +153,11 @@ public class SingularityTank implements Algorithm {
     
     // true, if upper bound exists
     private boolean upperBound(int x, int y) {
-        for(int i = y - 1; i >= 0; i--) {
-            if(!positionsOfIndestructibles.contains(new Position(x, i))) {
+        for (int i = y - 1; i >= 0; i--) {
+            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -167,7 +168,6 @@ public class SingularityTank implements Algorithm {
                 return false;
             }
         }
-
         return true;
     }
 
