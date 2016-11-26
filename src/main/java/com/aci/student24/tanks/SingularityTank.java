@@ -195,13 +195,53 @@ public class SingularityTank implements Algorithm {
     private List<TankMove> moveLastColumnTanks(List<Tank> tanks) {
         if (leftResp) {
             return tanks.stream()
-                    .map(t -> new TankMove(t.getId(), Direction.DOWN, shoot(t, Direction.DOWN)))
+                    .map(t -> {
+                        byte dir = getLastColumnDir(t);
+                        return new TankMove(t.getId(), dir, shoot(t, dir));
+                    })
                     .collect(Collectors.toList());
         } else {
             return tanks.stream()
                     .map(t -> new TankMove(t.getId(), Direction.UP, shoot(t, Direction.UP)))
                     .collect(Collectors.toList());
         }
+    }
+
+    private byte getLastColumnDir(Tank tank) {
+        if (leftResp) {
+            int nextY = tank.getY() + 1;
+            if (!positionsOfIndestructibles.contains(new Position(tank.getX(), nextY))) {
+                if (killChicken(tank)) {
+                    return Direction.RIGHT;
+                }
+                return Direction.DOWN;
+            } else {
+                return Direction.LEFT;
+            }
+        } else {
+            int nextY = tank.getY() - 1;
+            if (!positionsOfIndestructibles.contains(new Position(tank.getX(), nextY))) {
+                if (killChicken(tank)) {
+                    return Direction.LEFT;
+                }
+                return Direction.UP;
+            } else {
+                return Direction.RIGHT;
+            }
+        }
+    }
+
+    private boolean killChicken(Tank tank) {
+        if (leftResp) {
+            if (tank.getY() == 31 && tank.getX() >= 58) {
+                return true;
+            }
+        } else {
+            if (tank.getY() == 2 && tank.getX() <= 5) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean shoot(Tank tank, byte dir) {
