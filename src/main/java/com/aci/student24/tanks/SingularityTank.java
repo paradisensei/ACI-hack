@@ -24,6 +24,7 @@ public class SingularityTank implements Algorithm {
     private List<Position> positionsOfIndestructibles;
     private List<Tank> allTanks;
     private Set<Integer> lastColumnTanksIds;
+    private Tank defender;
 
 
     @Override
@@ -44,9 +45,33 @@ public class SingularityTank implements Algorithm {
                     .map(Position::getPosition)
                     .collect(Collectors.toList());
             lastColumnTanksIds = new HashSet<>();
+            if (leftResp) {
+                defender = allTanks.stream().min((o1, o2) -> {
+                    if (o1.getY() < o2.getY()) {
+                        return -1;
+                    }
+                    if (o1.getY() > o2.getY()) {
+                        return 1;
+                    }
+                    return 0;
+                }).get();
+            } else {
+                defender = allTanks.stream().max((o1, o2) -> {
+                    if (o1.getY() < o2.getY()) {
+                        return -1;
+                    }
+                    if (o1.getY() > o2.getY()) {
+                        return 1;
+                    }
+                    return 0;
+                }).get();
+            }
         }
 
         List<TankMove> resultingMoves = new ArrayList<>();
+        allTanks.removeIf(t -> t.getId() == defender.getId());
+        tanks.removeIf(t -> t.getId() == defender.getId());
+        resultingMoves.add(new TankMove(defender.getId(), Direction.NO, true));
 
         fillUpLastColumnTanks();
         List<Tank> lastColumnTanks = allTanks.stream()
