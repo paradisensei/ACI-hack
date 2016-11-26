@@ -51,15 +51,16 @@ public class SingularityTank implements Algorithm {
 
         List<Tank> lastColumnTanks = new ArrayList<>();
 
+        fillUpLastColumnTanks(lastColumnTanks);
 
-        if(!lastColumnTanks.isEmpty()) {
+        if (!lastColumnTanks.isEmpty()) {
             tanks.removeAll(lastColumnTanks);
             List<TankMove> tankMovesLastColumn = moveLastColumnTanks(lastColumnTanks);
             resultingMoves.addAll(tankMovesLastColumn);
         }
 
 
-        if(!tanks.isEmpty()) {
+        if (!tanks.isEmpty()) {
             Tank first = getFirst(tanks);
             Tank second = getSecond(tanks);
             // remove special tanks
@@ -123,7 +124,7 @@ public class SingularityTank implements Algorithm {
                 return Direction.DOWN;
             } else if (!upperBound(nextX, tank.getY())) {
                 return Direction.UP;
-            }  else {
+            } else {
                 return Direction.LEFT;
             }
         } else {
@@ -178,6 +179,19 @@ public class SingularityTank implements Algorithm {
         }
     }
 
+    private void fillUpLastColumnTanks(List<Tank> lastColumnTanks) {
+        allTanks.forEach(tank -> {
+            if (leftResp) {
+                if (tank.getX() == (MAX_X - 1))
+                    lastColumnTanks.add(tank);
+            } else {
+                if (tank.getX() == 0) {
+                    lastColumnTanks.add(tank);
+                }
+            }
+        });
+    }
+
     private List<TankMove> moveLastColumnTanks(List<Tank> tanks) {
         if (leftResp) {
             return tanks.stream()
@@ -226,7 +240,7 @@ public class SingularityTank implements Algorithm {
         }
         return true;
     }
-    
+
     // true, if upper bound exists
     private boolean upperBound(int x, int y) {
         for (int i = y - 1; i >= 0; i--) {
@@ -239,8 +253,8 @@ public class SingularityTank implements Algorithm {
 
     // true, if lower bound exists
     private boolean lowerBound(int x, int y) {
-        for(int i = y + 1; i < MAX_Y; i++) {
-            if(!positionsOfIndestructibles.contains(new Position(x, i))) {
+        for (int i = y + 1; i < MAX_Y; i++) {
+            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
                 return false;
             }
         }
