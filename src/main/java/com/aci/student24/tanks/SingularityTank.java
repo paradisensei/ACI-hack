@@ -4,6 +4,7 @@ import com.aci.student24.api.tanks.Algorithm;
 import com.aci.student24.api.tanks.objects.Indestructible;
 import com.aci.student24.api.tanks.objects.Position;
 import com.aci.student24.api.tanks.objects.Tank;
+import com.aci.student24.api.tanks.state.Direction;
 import com.aci.student24.api.tanks.state.MapState;
 import com.aci.student24.api.tanks.state.TankMove;
 
@@ -87,7 +88,6 @@ public class SingularityTank implements Algorithm {
         return tanks.stream().map(tank -> new TankMove(tank.getId(), getCommonDir(tank), true)).collect(Collectors.toList());
     }
 
-    // 2, 3, 1
     private byte getCommonDir(Tank tank) {
         List<Position> positionsOfIndestructibles = mapState.getIndestructibles().stream()
                 .map(Position::getPosition)
@@ -96,22 +96,22 @@ public class SingularityTank implements Algorithm {
         if (leftResp) {
             // if there is no obstacle to the right
             if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() + 1))) {
-                return 2;
+                return Direction.RIGHT;
                 // if there is no obstacle to the bottom
             } else if (!positionsOfIndestructibles.contains(new Position(tank.getX() + 1, tank.getY()))) {
-                return 3;
+                return Direction.DOWN;
             } else {
-                return 1;
+                return Direction.UP;
             }
         } else {
             // if there is no obstacle to the left
             if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() - 1))) {
-                return 4;
+                return Direction.LEFT;
                 // if there is no obstacle to the upper
             } else if (!positionsOfIndestructibles.contains(new Position(tank.getX() - 1, tank.getY()))) {
-                return 1;
+                return Direction.UP;
             } else {
-                return 3;
+                return Direction.DOWN;
             }
         }
     }
