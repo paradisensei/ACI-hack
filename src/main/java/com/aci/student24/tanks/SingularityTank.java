@@ -9,6 +9,7 @@ import com.aci.student24.api.tanks.state.MapState;
 import com.aci.student24.api.tanks.state.TankMove;
 
 import java.util.*;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 /**
@@ -20,6 +21,7 @@ public class SingularityTank implements Algorithm {
     private final int MAX_X = 64;
     private final int MAX_Y = 36;
     private Map<Integer, Position> oldPos = new HashMap<>();
+    private Map<Integer, Boolean> changedDir = new HashMap<>();
     private boolean firstRun = true;
     private boolean leftResp = false;
     private MapState mapState;
@@ -31,6 +33,7 @@ public class SingularityTank implements Algorithm {
 
     @Override
     public List<TankMove> nextMoves(MapState mapState) {
+        this.mapState = mapState;
         List<Tank> tanks = mapState.getTanks(teamId);
 
         this.mapState = mapState;
@@ -81,7 +84,94 @@ public class SingularityTank implements Algorithm {
     }
 
     private List<TankMove> moveSpecial(Tank first, Tank second) {
-
+        List<TankMove> tankMoves = new ArrayList<>();
+        //TODO use it!
+        List<Indestructible> indestructibles = mapState.getIndestructibles();
+        if (leftResp) {
+            if (firstRun) {
+                tankMoves.add(new TankMove(first.getId(), Direction.RIGHT, true));
+                tankMoves.add(new TankMove(second.getId(), Direction.RIGHT, true));
+                changedDir.put(first.getId(), false);
+                changedDir.put(second.getId(), false);
+            } else {
+                int oldDir = first.getOldDir();
+                Position pos = oldPos.get(first.getId());
+                if (pos.getY() == first.getY() && pos.getX() == first.getX()) {
+                    if (!changedDir.get(first.getId())) {
+                        changedDir.put(first.getId(), true);
+                        if (oldDir == Direction.RIGHT) {
+                            tankMoves.add(new TankMove(first.getId(), Direction.UP, true));
+                        } else if (oldDir == Direction.UP) {
+                            tankMoves.add(new TankMove(first.getId(), Direction.RIGHT, true));
+                        }
+                    } else {
+                        changedDir.put(first.getId(), false);
+                        tankMoves.add(new TankMove(first.getId(), (byte) oldDir, true));
+                    }
+                } else {
+                    tankMoves.add(new TankMove(first.getId(), (byte) oldDir, true));
+                }
+                oldDir = second.getOldDir();
+                pos = oldPos.get(second.getId());
+                if (pos.getY() == second.getY() && pos.getX() == second.getX()) {
+                    if (!changedDir.get(second.getId())) {
+                        changedDir.put(second.getId(), true);
+                        if (oldDir == Direction.RIGHT) {
+                            tankMoves.add(new TankMove(second.getId(), Direction.DOWN, true));
+                        } else if (oldDir == Direction.DOWN) {
+                            tankMoves.add(new TankMove(second.getId(), Direction.RIGHT, true));
+                        }
+                    } else {
+                        changedDir.put(second.getId(), false);
+                        tankMoves.add(new TankMove(second.getId(), (byte) oldDir, true));
+                    }
+                } else {
+                    tankMoves.add(new TankMove(second.getId(), (byte) oldDir, true));
+                }
+            }
+        } else {
+            if (firstRun) {
+                tankMoves.add(new TankMove(first.getId(), Direction.LEFT, true));
+                tankMoves.add(new TankMove(second.getId(), Direction.LEFT, true));
+                changedDir.put(first.getId(), false);
+                changedDir.put(second.getId(), false);
+            } else {
+                int oldDir = first.getOldDir();
+                Position pos = oldPos.get(first.getId());
+                if (pos.getY() == first.getY() && pos.getX() == first.getX()) {
+                    if (!changedDir.get(first.getId())) {
+                        changedDir.put(first.getId(), true);
+                        if (oldDir == Direction.LEFT) {
+                            tankMoves.add(new TankMove(first.getId(), Direction.DOWN, true));
+                        } else if (oldDir == Direction.DOWN) {
+                            tankMoves.add(new TankMove(first.getId(), Direction.LEFT, true));
+                        }
+                    } else {
+                        changedDir.put(first.getId(), false);
+                        tankMoves.add(new TankMove(first.getId(), (byte) oldDir, true));
+                    }
+                } else {
+                    tankMoves.add(new TankMove(first.getId(), (byte) oldDir, true));
+                }
+                oldDir = second.getOldDir();
+                pos = oldPos.get(second.getId());
+                if (pos.getY() == second.getY() && pos.getX() == second.getX()) {
+                    if (!changedDir.get(second.getId())) {
+                        changedDir.put(second.getId(), true);
+                        if (oldDir == Direction.LEFT) {
+                            tankMoves.add(new TankMove(second.getId(), Direction.UP, true));
+                        } else if (oldDir == Direction.UP) {
+                            tankMoves.add(new TankMove(second.getId(), Direction.LEFT, true));
+                        }
+                    } else {
+                        changedDir.put(second.getId(), false);
+                        tankMoves.add(new TankMove(second.getId(), (byte) oldDir, true));
+                    }
+                } else {
+                    tankMoves.add(new TankMove(second.getId(), (byte) oldDir, true));
+                }
+            }
+        }
     }
 
     private List<TankMove> moveCommon(List<Tank> tanks) {
