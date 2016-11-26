@@ -266,7 +266,7 @@ public class SingularityTank implements Algorithm {
             return tanks.stream()
                     .map(t -> {
                         byte dir = getLastColumnDir(t);
-                        return new TankMove(t.getId(), dir, true);
+                        return new TankMove(t.getId(), dir, shoot(t, dir));
                     })
                     .collect(Collectors.toList());
         }
@@ -298,7 +298,7 @@ public class SingularityTank implements Algorithm {
 
     private boolean killChicken(Tank tank) {
         if (leftResp) {
-            if (tank.getY() == 31 && tank.getX() >= 58) {
+            if (tank.getY() == 33 && tank.getX() >= 58) {
                 return true;
             }
         } else {
