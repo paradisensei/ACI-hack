@@ -9,7 +9,6 @@ import com.aci.student24.api.tanks.state.MapState;
 import com.aci.student24.api.tanks.state.TankMove;
 
 import java.util.*;
-import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +24,7 @@ public class SingularityTank implements Algorithm {
     private boolean firstRun = true;
     private boolean leftResp = false;
     private MapState mapState;
+    List<Position> positionsOfIndestructibles;
 
     @Override
     public void setMyId(int id) {
@@ -35,14 +35,13 @@ public class SingularityTank implements Algorithm {
     public List<TankMove> nextMoves(MapState mapState) {
         this.mapState = mapState;
         List<Tank> tanks = mapState.getTanks(teamId);
-
-        this.mapState = mapState;
-
         if (firstRun) {
             leftResp = tanks.get(0).getX() < MAX_X / 2;
             firstRun = false;
-
             storePositions(tanks);
+            positionsOfIndestructibles = mapState.getIndestructibles().stream()
+                    .map(Position::getPosition)
+                    .collect(Collectors.toList());
         }
         Tank first = getFirst(tanks);
         Tank second = getSecond(tanks);
@@ -54,29 +53,6 @@ public class SingularityTank implements Algorithm {
         List<TankMove> tankMovesCommon = moveCommon(tanks);
         tankMovesCommon.addAll(tankMovesSpecial);
         return tankMovesCommon;
-    }
-
-    private void staff() {
-        //TODO ebash!!!
-        List<TankMove> tankMoves = new ArrayList<>();
-        List<Tank> didntDoAnything;
-        else{
-            didntDoAnything = tanks.stream()
-                    .filter(t -> t.getPosition().equals(oldPos.get(t.getId()).getPosition())
-                            && t.getDir() == t.getOldDir()).collect(Collectors.toList());
-        }
-        didntDoAnything
-        tanks.stream().map(t ->
-                new TankMove(t.getId(), leftResp ? (byte) 2 : (byte) 4, true)
-        ).collect(Collectors.toList());
-        if (leftResp) {
-            tankMoves.add(new TankMove(first.getId(), (byte) 1, true));
-            tankMoves.add(new TankMove(second.getId(), (byte) 3, true));
-        } else {
-            tankMoves.add(new TankMove(first.getId(), (byte) 3, true));
-            tankMoves.add(new TankMove(second.getId(), (byte) 1, true));
-        }
-        return tankMoves;
     }
 
     private void storePositions(List<Tank> tanks) {
@@ -172,33 +148,33 @@ public class SingularityTank implements Algorithm {
                 }
             }
         }
+        return tankMoves;
     }
 
     private List<TankMove> moveCommon(List<Tank> tanks) {
-        return tanks.stream().map(tank -> new TankMove(tank.getId(), getCommonDir(tank), true)).collect(Collectors.toList());
+        return tanks.stream()
+                .map(tank -> new TankMove(tank.getId(), getCommonDir(tank), true))
+                .collect(Collectors.toList());
     }
 
     private byte getCommonDir(Tank tank) {
-        List<Position> positionsOfIndestructibles = mapState.getIndestructibles().stream()
-                .map(Position::getPosition)
-                .collect(Collectors.toList());
-
         if (leftResp) {
             // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() + 1))) {
+            //TODO циклится
+            if (!positionsOfIndestructibles.contains(new Position(tank.getX() + 1, tank.getY()))) {
                 return Direction.RIGHT;
                 // if there is no obstacle to the bottom
-            } else if (!positionsOfIndestructibles.contains(new Position(tank.getX() + 1, tank.getY()))) {
+            } else if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() + 1))) {
                 return Direction.DOWN;
             } else {
                 return Direction.UP;
             }
         } else {
             // if there is no obstacle to the left
-            if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() - 1))) {
+            if (!positionsOfIndestructibles.contains(new Position(tank.getX() - 1, tank.getY()))) {
                 return Direction.LEFT;
                 // if there is no obstacle to the upper
-            } else if (!positionsOfIndestructibles.contains(new Position(tank.getX() - 1, tank.getY()))) {
+            } else if (!positionsOfIndestructibles.contains(new Position(tank.getX(), tank.getY() - 1))) {
                 return Direction.UP;
             } else {
                 return Direction.DOWN;
