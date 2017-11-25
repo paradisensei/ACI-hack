@@ -376,7 +376,7 @@ public class MiningTank implements Algorithm {
                 }
 
                 if (defender.getY() < MAX_Y / 2) {
-                    return new TankMove(defender.getId(), Direction.DOWN, false);
+                    return new TankMove(defender.getId(), Direction.UP, false);
                 }
 
             }
