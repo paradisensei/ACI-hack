@@ -643,12 +643,22 @@ public class MiningTank implements Algorithm {
 
     // true, if upper bound exists
     private boolean upperBound(int x, int y) {
-        return positionsOfIndestructibles.contains(new Position(x, y));
+        for (int i = y - 1; i >= 0; i--) {
+            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // true, if lower bound exists
     private boolean lowerBound(int x, int y) {
-        return positionsOfIndestructibles.contains(new Position(x, y));
+        for (int i = y + 1; i < MAX_Y; i++) {
+            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
