@@ -11,6 +11,8 @@ import com.aci.student24.api.tanks.state.TankMove;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.*;
+
 /**
  * @author Aidar Shaifutdinov.
  */
@@ -23,8 +25,13 @@ public class MiningTank implements Algorithm {
     private boolean firstRun = true;
     private boolean leftResp = false;
     private List<Position> positionsOfIndestructibles;
+    private List<Position> positionsOfBricks;
     private List<Tank> allTanks;
     private Tank defender;
+
+    // keep track of number of iterations of the game
+    private int iter = 0;
+    private final int FIRST_ITER = 5;
 
     @Override
     public void setMyId(int id) {
@@ -33,6 +40,8 @@ public class MiningTank implements Algorithm {
 
     @Override
     public List<TankMove> nextMoves(MapState mapState) {
+        iter++;
+
         // set size of current map
         Size mapSize = mapState.getSize();
         MAX_X = mapSize.getWidth();
@@ -50,16 +59,24 @@ public class MiningTank implements Algorithm {
                     .stream()
                     .map(Position::getPosition)
                     .collect(Collectors.toList());
-            //TODO maybe change logic behind choosing DEFENDER tank
-            if (leftResp) {
-                defender = allTanks
-                        .stream()
-                        .min(Comparator.comparingInt(Position::getY)).get();
-            } else {
-                defender = allTanks
-                        .stream()
-                        .max(Comparator.comparingInt(Position::getY)).get();
-            }
+            positionsOfBricks = mapState.getBricks()
+                    .stream()
+                    .map(Position::getPosition)
+                    .collect(Collectors.toList());
+
+            // choose DEFENDER tank to be the farthest from enemy's base
+            Position enemy = mapState.getBases()
+                    .stream()
+                    .filter(b -> b.getTeamId() != teamId)
+                    .findFirst().get().getPosition();
+            int enemyX = enemy.getX();
+            int enemyY = enemy.getY();
+
+            defender = tanks.stream().max((t1, t2) -> {
+                double dist1 = abs(sqrt(t1.getX() - enemyX) + sqrt(t1.getY() - enemyY));
+                double dist2 = abs(sqrt(t2.getX() - enemyX) + sqrt(t2.getY() - enemyY));
+                return Double.compare(dist1, dist2);
+            }).get();
         }
 
         //TODO maybe change strategy for DEFENDER tank
@@ -98,121 +115,126 @@ public class MiningTank implements Algorithm {
 
     private TankMove moveDefender(MapState mapState) {
         //TODO defender strategy
+        try {
+            //getNearest enemy position and direction
+            List<Tank> enemies = mapState.getTanks()
+                    .stream()
+                    .filter(tank -> tank.getTeamId() != teamId)
+                    .collect(Collectors.toList());
 
-        //getNearest enemy position and direction
-        List<Tank> enemies = mapState.getTanks().stream().filter(tank -> tank.getTeamId() != teamId)
-                .collect(Collectors.toList());
+            int defenderX = defender.getX();
+            int defenderY = defender.getY();
 
-        int defenderX = defender.getX();
-        int defenderY = defender.getY();
+            int minDist = Integer.MAX_VALUE;
+            int nearestEnemyId = -1;
 
-        int minDist = Integer.MAX_VALUE;
-        int nearestEnemyId = -1;
+            for (Tank enemy : enemies) {
+                int enemyX = enemy.getX();
+                int enemyY = enemy.getY();
 
-        for (Tank enemy : enemies) {
-            int enemyX = enemy.getX();
-            int enemyY = enemy.getY();
+                int dist = (int) abs(sqrt(enemyX - defenderX) + sqrt(enemyY - defenderY));
 
-            int dist = (int) Math.abs(Math.sqrt(enemyX - defenderX) + Math.sqrt(enemyY - defenderY));
-
-            if (dist < minDist) {
-                minDist = dist;
-                nearestEnemyId = enemy.getId();
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestEnemyId = enemy.getId();
+                }
             }
-        }
 
-        int finalNearestEnemyId = nearestEnemyId;
-        Tank nearestEnemy = enemies.stream().filter(tank -> tank.getId() == finalNearestEnemyId).collect(Collectors.toList()).get(0);
+            int finalNearestEnemyId = nearestEnemyId;
+            Tank nearestEnemy = enemies.stream().filter(tank -> tank.getId() == finalNearestEnemyId).collect(Collectors.toList()).get(0);
 
-        int enemyX = nearestEnemy.getX();
-        int enemyY = nearestEnemy.getY();
-        byte enemyDir = nearestEnemy.getDir();
+            int enemyX = nearestEnemy.getX();
+            int enemyY = nearestEnemy.getY();
+            byte enemyDir = nearestEnemy.getDir();
 
-        // watch his direction and fire
-        if (leftResp) {
-            //if enemy higher
-            if (enemyY < defenderY) {
+            // watch his direction and fire
+            if (leftResp) {
+                //if enemy higher
+                if (enemyY < defenderY) {
 
-                if (enemyDir == Direction.LEFT) {
-                    if (defender.getDir() != Direction.UP) {
-                        return new TankMove(defender.getId(), Direction.UP, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.LEFT) {
+                        if (defender.getDir() != Direction.UP) {
+                            return new TankMove(defender.getId(), Direction.UP, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
-                }
 
-                if (enemyDir == Direction.DOWN) {
-                    if (defender.getDir() != Direction.RIGHT) {
-                        return new TankMove(defender.getId(), Direction.RIGHT, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.DOWN) {
+                        if (defender.getDir() != Direction.RIGHT) {
+                            return new TankMove(defender.getId(), Direction.RIGHT, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
-                }
 
-                //if downer
-            } else if (enemyY > enemyX) {
+                    //if downer
+                } else if (enemyY > enemyX) {
 
-                if (enemyDir == Direction.LEFT) {
-                    if (defender.getDir() != Direction.DOWN) {
-                        return new TankMove(defender.getId(), Direction.DOWN, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.LEFT) {
+                        if (defender.getDir() != Direction.DOWN) {
+                            return new TankMove(defender.getId(), Direction.DOWN, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
-                }
 
-                if (enemyDir == Direction.UP) {
-                    if (defender.getDir() != Direction.RIGHT) {
-                        return new TankMove(defender.getId(), Direction.RIGHT, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.UP) {
+                        if (defender.getDir() != Direction.RIGHT) {
+                            return new TankMove(defender.getId(), Direction.RIGHT, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
+                    //on the same line
+                } else {
+                    return new TankMove(defender.getId(), Direction.UP, true);
                 }
-                //on the same line
             } else {
-                return new TankMove(defender.getId(), Direction.UP, true);
-            }
-        } else {
 //if enemy higher
-            if (enemyY < defenderY) {
+                if (enemyY < defenderY) {
 
-                if (enemyDir == Direction.RIGHT) {
-                    if (defender.getDir() != Direction.UP) {
-                        return new TankMove(defender.getId(), Direction.UP, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.RIGHT) {
+                        if (defender.getDir() != Direction.UP) {
+                            return new TankMove(defender.getId(), Direction.UP, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
-                }
 
-                if (enemyDir == Direction.DOWN) {
-                    if (defender.getDir() != Direction.LEFT) {
-                        return new TankMove(defender.getId(), Direction.LEFT, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.DOWN) {
+                        if (defender.getDir() != Direction.LEFT) {
+                            return new TankMove(defender.getId(), Direction.LEFT, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
-                }
 
-                //if downer
-            } else if (enemyY > enemyX) {
+                    //if downer
+                } else if (enemyY > enemyX) {
 
-                if (enemyDir == Direction.RIGHT) {
-                    if (defender.getDir() != Direction.DOWN) {
-                        return new TankMove(defender.getId(), Direction.DOWN, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.RIGHT) {
+                        if (defender.getDir() != Direction.DOWN) {
+                            return new TankMove(defender.getId(), Direction.DOWN, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
-                }
 
-                if (enemyDir == Direction.UP) {
-                    if (defender.getDir() != Direction.LEFT) {
-                        return new TankMove(defender.getId(), Direction.LEFT, true);
-                    } else {
-                        return new TankMove(defender.getId(), Direction.NO, true);
+                    if (enemyDir == Direction.UP) {
+                        if (defender.getDir() != Direction.LEFT) {
+                            return new TankMove(defender.getId(), Direction.LEFT, true);
+                        } else {
+                            return new TankMove(defender.getId(), Direction.NO, true);
+                        }
                     }
+                    //on the same line
+                } else {
+                    return new TankMove(defender.getId(), Direction.UP, true);
                 }
-                //on the same line
-            } else {
-                return new TankMove(defender.getId(), Direction.UP, true);
             }
+        } catch (Exception ignored) {
+            System.err.println("DEFENDER FAILED!!!!!!!!!!!!!!!!!!!!!!!!1");
         }
         return new TankMove(defender.getId(), Direction.NO, true);
     }
@@ -231,7 +253,7 @@ public class MiningTank implements Algorithm {
         if (leftResp) {
             int nextX = tank.getX() + 1;
             // if there is no obstacle in the straight direction (to the right)
-            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
+            if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
             } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
@@ -243,7 +265,7 @@ public class MiningTank implements Algorithm {
         } else {
             int nextX = tank.getX() - 1;
             // if there is no obstacle in the straight direction (to the left)
-            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
+            if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.LEFT;
             } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
@@ -260,7 +282,7 @@ public class MiningTank implements Algorithm {
         if (leftResp) {
             int nextX = tank.getX() + 1;
             // if there is no obstacle in the straight direction (to the right)
-            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
+            if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
             } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
@@ -272,7 +294,7 @@ public class MiningTank implements Algorithm {
         } else {
             int nextX = tank.getX() - 1;
             // if there is no obstacle in the straight direction (to the left)
-            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
+            if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.LEFT;
             } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
@@ -298,7 +320,7 @@ public class MiningTank implements Algorithm {
         if (leftResp) {
             int nextX = tank.getX() + 1;
             // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
+            if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
                 //TODO ??? && !lowerCorner(tank) upperCorner()..
             } else if (!lowerBound(nextX, y)) {
@@ -311,74 +333,24 @@ public class MiningTank implements Algorithm {
         } else {
             int nextX = tank.getX() - 1;
             // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
+            if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!lowerBound(nextX, y)) {
-                return Direction.DOWN;
             } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
+            } else if (!lowerBound(nextX, y)) {
+                return Direction.DOWN;
             } else {
                 return Direction.LEFT;
             }
         }
     }
 
-    private boolean lowerCorner(Tank tank) {
-        Optional<Position> lowIndOpt = positionsOfIndestructibles.stream()
-                .filter(ind -> tank.getX() == ind.getX()
-                        && ind.getY() > tank.getY()).min((o1, o2) -> {
-                    if (o1.getY() < o2.getY()) {
-                        return -1;
-                    }
-                    if (o1.getY() > o2.getY()) {
-                        return 1;
-                    }
-                    return 0;
-                });
-        if (!lowIndOpt.isPresent()) {
-            return false;
+    private boolean straightObstacle(Position position) {
+        boolean flag = positionsOfIndestructibles.contains(position);
+        if (iter < FIRST_ITER) {
+            flag = flag || positionsOfBricks.contains(position);
         }
-        Position lowInd = lowIndOpt.get();
-        Optional<Position> lowRightIndOpt = positionsOfIndestructibles.stream()
-                .filter(ind -> lowInd.getX() + 1 == ind.getX() && lowInd.getY() == ind.getY())
-                .findAny();
-        if (!lowRightIndOpt.isPresent()) {
-            return false;
-        }
-        Position lowRightInd = lowRightIndOpt.get();
-        Optional<Position> lowRightUpperIndOpt = positionsOfIndestructibles.stream()
-                .filter(ind -> lowRightInd.getX() == ind.getX() && lowRightInd.getY() - 1 == ind.getY())
-                .findAny();
-        return lowRightUpperIndOpt.isPresent();
-    }
-
-    private boolean upperCorner(Tank tank) {
-        Optional<Position> upIndOpt = positionsOfIndestructibles.stream()
-                .filter(ind -> tank.getX() == ind.getX()
-                        && ind.getY() < tank.getY()).max((o1, o2) -> {
-                    if (o1.getY() < o2.getY()) {
-                        return -1;
-                    }
-                    if (o1.getY() > o2.getY()) {
-                        return 1;
-                    }
-                    return 0;
-                });
-        if (!upIndOpt.isPresent()) {
-            return false;
-        }
-        Position upInd = upIndOpt.get();
-        Optional<Position> upLeftIndOpt = positionsOfIndestructibles.stream()
-                .filter(ind -> upInd.getX() - 1 == ind.getX() && upInd.getY() == ind.getY())
-                .findAny();
-        if (!upLeftIndOpt.isPresent()) {
-            return false;
-        }
-        Position upLeftInd = upLeftIndOpt.get();
-        Optional<Position> upLeftBottomIndOpt = positionsOfIndestructibles.stream()
-                .filter(ind -> upLeftInd.getX() == ind.getX() && upLeftInd.getY() + 1 == ind.getY())
-                .findAny();
-        return upLeftBottomIndOpt.isPresent();
+        return flag;
     }
 
     /**
@@ -429,7 +401,7 @@ public class MiningTank implements Algorithm {
     private byte getLastColumnDir(Tank tank) {
         if (leftResp) {
             int nextY = tank.getY() + 1;
-            if (!positionsOfIndestructibles.contains(new Position(tank.getX(), nextY))) {
+            if (!straightObstacle(new Position(tank.getX(), nextY))) {
                 //TODO define strategy for destroying enemy's base
 //                if (killChicken(tank)) {
 //                    return Direction.RIGHT;
@@ -440,7 +412,7 @@ public class MiningTank implements Algorithm {
             }
         } else {
             int nextY = tank.getY() - 1;
-            if (!positionsOfIndestructibles.contains(new Position(tank.getX(), nextY))) {
+            if (!straightObstacle(new Position(tank.getX(), nextY))) {
 //                if (killChicken(tank)) {
 //                    return Direction.LEFT;
 //                }
@@ -471,6 +443,10 @@ public class MiningTank implements Algorithm {
      * @return whether should make a shot or not
      */
     private boolean shoot(Tank tank, byte dir) {
+        // don`t shoot in the start of the game
+        if (iter < FIRST_ITER) {
+            return false;
+        }
         int x = tank.getX();
         int y = tank.getY();
         boolean found = false;
