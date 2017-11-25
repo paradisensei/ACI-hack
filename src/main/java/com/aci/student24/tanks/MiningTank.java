@@ -364,7 +364,7 @@ public class MiningTank implements Algorithm {
                         }
                         //on the same line
                     } else {
-//                        return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
+                        return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
                     }
                 }
             } else {
