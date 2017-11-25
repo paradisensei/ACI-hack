@@ -99,13 +99,30 @@ public class MiningTank implements Algorithm {
     private TankMove moveDefender(MapState mapState) {
         //TODO defender strategy
 
-        //getNearest enemy position and direction
         List<Tank> enemies = mapState.getTanks().stream().filter(tank -> tank.getTeamId() != teamId)
                 .collect(Collectors.toList());
 
         int defenderX = defender.getX();
         int defenderY = defender.getY();
 
+        // enemy can kill
+        boolean isDangerous = false;
+        for (Tank enemy: enemies) {
+            if (enemy.getX() == defenderX) {
+                isDangerous = true;
+            }
+        }
+
+        if (isDangerous) {
+            if (leftResp) {
+                return new TankMove(defender.getId(), Direction.RIGHT, true);
+            } else {
+                return new TankMove(defender.getId(), Direction.LEFT, true);
+            }
+        }
+
+        //no enemy who can kill then
+        //getNearest enemy position and direction
         int minDist = Integer.MAX_VALUE;
         int nearestEnemyId = -1;
 
