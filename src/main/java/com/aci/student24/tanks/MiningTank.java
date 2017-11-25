@@ -93,8 +93,8 @@ public class MiningTank implements Algorithm {
             int enemyY = enemy.getY();
 
             defender = tanks.stream().max((t1, t2) -> {
-                double dist1 = abs(sqrt(t1.getX() - enemyX) + sqrt(t1.getY() - enemyY));
-                double dist2 = abs(sqrt(t2.getX() - enemyX) + sqrt(t2.getY() - enemyY));
+                double dist1 = Math.pow(t1.getX() - enemyX, 2) + Math.pow(t1.getY() - enemyY, 2);
+                double dist2 = Math.pow(t2.getX() - enemyX, 2) + Math.pow(t2.getY() - enemyY, 2);
                 return Double.compare(dist1, dist2);
             }).get();
         }
@@ -168,7 +168,7 @@ public class MiningTank implements Algorithm {
                 int enemyX = enemy.getX();
                 int enemyY = enemy.getY();
 
-                int dist = (int) Math.abs(Math.sqrt(enemyX - defenderX) + Math.sqrt(enemyY - defenderY));
+                int dist = (int) (Math.pow(enemyX - defenderX, 2) + Math.pow(enemyY - defenderY, 2));
 
                 if (dist < minDist) {
                     minDist = dist;
@@ -370,11 +370,11 @@ public class MiningTank implements Algorithm {
             } else {
 
                 if (defender.getY() > MAX_Y / 2) {
-                    return new TankMove(defender.getId(), Direction.UP, shoot(defender, defender.getDir()));
+                    return new TankMove(defender.getId(), Direction.UP, false);
                 }
 
                 if (defender.getY() < MAX_Y / 2) {
-                    return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
+                    return new TankMove(defender.getId(), Direction.DOWN, false);
                 }
 
             }
