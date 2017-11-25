@@ -24,7 +24,6 @@ public class MiningTank implements Algorithm {
     private boolean leftResp = false;
     private List<Position> positionsOfIndestructibles;
     private List<Tank> allTanks;
-    private Set<Integer> lastColumnTanksIds;
     private Tank defender;
 
     @Override
@@ -51,7 +50,7 @@ public class MiningTank implements Algorithm {
                     .stream()
                     .map(Position::getPosition)
                     .collect(Collectors.toList());
-            lastColumnTanksIds = new HashSet<>();
+            //TODO maybe change logic behind choosing DEFENDER tank
             if (leftResp) {
                 defender = allTanks
                         .stream()
@@ -69,7 +68,7 @@ public class MiningTank implements Algorithm {
         tanks.removeIf(t -> t.getId() == defender.getId());
         resultingMoves.add(moveDefender(mapState));
 
-        fillUpLastColumnTanks();
+        Set<Integer> lastColumnTanksIds = fillUpLastColumnTanks();
         List<Tank> lastColumnTanks = allTanks.stream()
                 .filter(t -> lastColumnTanksIds.contains(t.getId()))
                 .collect(Collectors.toList());
@@ -112,26 +111,27 @@ public class MiningTank implements Algorithm {
     }
 
     private byte getFirstSpecialDir(Tank tank) {
+        final int y = tank.getY();
         if (leftResp) {
             int nextX = tank.getX() + 1;
-            // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+            // if there is no obstacle in the straight direction (to the right)
+            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
                 return Direction.RIGHT;
-            } else if (!upperBound(nextX, tank.getY())) {
+            } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
-            } else if (!lowerBound(nextX, tank.getY())) {
+            } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
             } else {
                 return Direction.LEFT;
             }
         } else {
             int nextX = tank.getX() - 1;
-            // if there is no obstacle to the left
-            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+            // if there is no obstacle in the straight direction (to the left)
+            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!lowerBound(nextX, tank.getY())) {
+            } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, tank.getY())) {
+            } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.RIGHT;
@@ -140,26 +140,27 @@ public class MiningTank implements Algorithm {
     }
 
     private byte getSecondSpecialDir(Tank tank) {
+        final int y = tank.getY();
         if (leftResp) {
             int nextX = tank.getX() + 1;
-            // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+            // if there is no obstacle in the straight direction (to the right)
+            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
                 return Direction.RIGHT;
-            } else if (!lowerBound(nextX, tank.getY())) {
+            } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, tank.getY())) {
+            } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.LEFT;
             }
         } else {
             int nextX = tank.getX() - 1;
-            // if there is no obstacle to the left
-            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+            // if there is no obstacle in the straight direction (to the left)
+            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!upperBound(nextX, tank.getY())) {
+            } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
-            } else if (!lowerBound(nextX, tank.getY())) {
+            } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
             } else {
                 return Direction.RIGHT;
@@ -177,14 +178,16 @@ public class MiningTank implements Algorithm {
     }
 
     private byte getCommonDir(Tank tank) {
+        final int y = tank.getY();
         if (leftResp) {
             int nextX = tank.getX() + 1;
             // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
                 return Direction.RIGHT;
-            } else if (!lowerBound(nextX, tank.getY()) && !lowerCorner(tank)) {
+                //TODO ??? && !lowerCorner(tank) upperCorner()..
+            } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, tank.getY())) {
+            } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.LEFT;
@@ -192,11 +195,11 @@ public class MiningTank implements Algorithm {
         } else {
             int nextX = tank.getX() - 1;
             // if there is no obstacle to the right
-            if (!positionsOfIndestructibles.contains(new Position(nextX, tank.getY()))) {
+            if (!positionsOfIndestructibles.contains(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!lowerBound(nextX, tank.getY())) {
+            } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, tank.getY())) {
+            } else if (!upperBound(nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.LEFT;
@@ -265,7 +268,8 @@ public class MiningTank implements Algorithm {
     /**
      * Checks is some tanks have reached another side of map
      */
-    private void fillUpLastColumnTanks() {
+    private Set<Integer> fillUpLastColumnTanks() {
+        Set<Integer> lastColumnTanksIds = new HashSet<>();
         allTanks.forEach(tank -> {
             if (leftResp) {
                 if (tank.getX() == (MAX_X - 1))
@@ -276,6 +280,7 @@ public class MiningTank implements Algorithm {
                 }
             }
         });
+        return lastColumnTanksIds;
     }
 
     /**
@@ -309,9 +314,10 @@ public class MiningTank implements Algorithm {
         if (leftResp) {
             int nextY = tank.getY() + 1;
             if (!positionsOfIndestructibles.contains(new Position(tank.getX(), nextY))) {
-                if (killChicken(tank)) {
-                    return Direction.RIGHT;
-                }
+                //TODO define strategy for destroying enemy's base
+//                if (killChicken(tank)) {
+//                    return Direction.RIGHT;
+//                }
                 return Direction.DOWN;
             } else {
                 return Direction.LEFT;
@@ -319,9 +325,9 @@ public class MiningTank implements Algorithm {
         } else {
             int nextY = tank.getY() - 1;
             if (!positionsOfIndestructibles.contains(new Position(tank.getX(), nextY))) {
-                if (killChicken(tank)) {
-                    return Direction.LEFT;
-                }
+//                if (killChicken(tank)) {
+//                    return Direction.LEFT;
+//                }
                 return Direction.UP;
             } else {
                 return Direction.RIGHT;
