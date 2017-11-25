@@ -505,11 +505,12 @@ public class MiningTank implements Algorithm {
     private Set<Integer> fillUpLastColumnTanks() {
         Set<Integer> lastColumnTanksIds = new HashSet<>();
         allTanks.forEach(tank -> {
+            int x = tank.getX();
             if (leftResp) {
-                if (tank.getX() == (MAX_X - 1))
+                if (x == (MAX_X - 1) || x == (MAX_X - 2))
                     lastColumnTanksIds.add(tank.getId());
             } else {
-                if (tank.getX() == 0) {
+                if (x == 0 || x == 1) {
                     lastColumnTanksIds.add(tank.getId());
                 }
             }
@@ -518,8 +519,8 @@ public class MiningTank implements Algorithm {
     }
 
     /**
-     * @param tanks last column tanks
-     * @return moves for last column tanks
+     * @param tanks 2 last column tanks
+     * @return moves for 2 last column tanks
      */
     private List<TankMove> moveLastColumnTanks(List<Tank> tanks) {
         if (leftResp) {
@@ -545,42 +546,56 @@ public class MiningTank implements Algorithm {
      * @return moving directory for last column tank
      */
     private byte getLastColumnDir(Tank tank) {
+        int x = tank.getX();
+        int y = tank.getY();
+        int enemyX = enemy.getX();
+        int enemyY = enemy.getY();
+
         if (leftResp) {
-            int nextY = tank.getY() + 1;
-            if (!straightObstacle(new Position(tank.getX(), nextY))) {
-                //TODO define strategy for destroying enemy's base
-//                if (killChicken(tank)) {
-//                    return Direction.RIGHT;
-//                }
-                return Direction.DOWN;
+            // check if tank and enemy's base have the same X coordinate
+            if (x != enemyX) {
+                return Direction.RIGHT;
+            }
+
+            // find out right moving direction along Y axis
+            int nextY;
+            byte dir;
+            if (y < enemyY) {
+                nextY = y + 1;
+                dir = Direction.DOWN;
             } else {
+                nextY = y - 1;
+                dir = Direction.UP;
+            }
+            if (!straightObstacle(new Position(x, nextY))) {
+                return dir;
+            } else {
+                //TODO add obstacle avoidance for 2 last column tanks
                 return Direction.LEFT;
             }
         } else {
-            int nextY = tank.getY() - 1;
-            if (!straightObstacle(new Position(tank.getX(), nextY))) {
-//                if (killChicken(tank)) {
-//                    return Direction.LEFT;
-//                }
-                return Direction.UP;
+            // check if tank and enemy's base have the same X coordinate
+            if (x != enemyX) {
+                return Direction.LEFT;
+            }
+
+            // find out right moving direction along Y axis
+            int nextY;
+            byte dir;
+            if (y < enemyY) {
+                nextY = y + 1;
+                dir = Direction.DOWN;
             } else {
+                nextY = y - 1;
+                dir = Direction.UP;
+            }
+            if (!straightObstacle(new Position(x, nextY))) {
+                return dir;
+            } else {
+                //TODO add obstacle avoidance for 2 last column tanks
                 return Direction.RIGHT;
             }
         }
-    }
-
-    private boolean killChicken(Tank tank) {
-        //TODO hardcode!!!
-        if (leftResp) {
-            if (tank.getY() == 33 && tank.getX() >= 58) {
-                return true;
-            }
-        } else {
-            if (tank.getY() == 2 && tank.getX() <= 5) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
