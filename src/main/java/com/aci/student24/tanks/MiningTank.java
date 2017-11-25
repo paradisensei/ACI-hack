@@ -13,14 +13,13 @@ import java.util.stream.Collectors;
 /**
  * @author Aidar Shaifutdinov.
  */
-public class SingularityTank implements Algorithm {
+public class MiningTank implements Algorithm {
 
     private int teamId;
     private final int MAX_X = 64;
     private final int MAX_Y = 36;
     private boolean firstRun = true;
     private boolean leftResp = false;
-    private MapState mapState;
     private List<Position> positionsOfIndestructibles;
     private List<Tank> allTanks;
     private Set<Integer> lastColumnTanksIds;
@@ -34,40 +33,31 @@ public class SingularityTank implements Algorithm {
 
     @Override
     public List<TankMove> nextMoves(MapState mapState) {
-        this.mapState = mapState;
+        // get all our tanks
         List<Tank> tanks = mapState.getTanks(teamId);
         allTanks = new ArrayList<>(tanks);
 
+        // find out where resp is & choose DEFENDER tank
         if (firstRun) {
             leftResp = tanks.get(0).getX() < MAX_X / 2;
             firstRun = false;
-            positionsOfIndestructibles = mapState.getIndestructibles().stream()
+            positionsOfIndestructibles = mapState.getIndestructibles()
+                    .stream()
                     .map(Position::getPosition)
                     .collect(Collectors.toList());
             lastColumnTanksIds = new HashSet<>();
             if (leftResp) {
-                defender = allTanks.stream().min((o1, o2) -> {
-                    if (o1.getY() < o2.getY()) {
-                        return -1;
-                    }
-                    if (o1.getY() > o2.getY()) {
-                        return 1;
-                    }
-                    return 0;
-                }).get();
+                defender = allTanks
+                        .stream()
+                        .min(Comparator.comparingInt(Position::getY)).get();
             } else {
-                defender = allTanks.stream().max((o1, o2) -> {
-                    if (o1.getY() < o2.getY()) {
-                        return -1;
-                    }
-                    if (o1.getY() > o2.getY()) {
-                        return 1;
-                    }
-                    return 0;
-                }).get();
+                defender = allTanks
+                        .stream()
+                        .max(Comparator.comparingInt(Position::getY)).get();
             }
         }
 
+        //TODO maybe change strategy for DEFENDER tank
         List<TankMove> resultingMoves = new ArrayList<>();
         allTanks.removeIf(t -> t.getId() == defender.getId());
         tanks.removeIf(t -> t.getId() == defender.getId());
@@ -105,10 +95,8 @@ public class SingularityTank implements Algorithm {
         List<TankMove> tankMoves = new ArrayList<>();
         byte dir = getFirstSpecialDir(first);
         tankMoves.add(new TankMove(first.getId(), dir, shoot(first, dir)));
-//        tankMoves.add(new TankMove(first.getId(), dir, true));
         dir = getSecondSpecialDir(second);
         tankMoves.add(new TankMove(second.getId(), dir, shoot(second, dir)));
-//        tankMoves.add(new TankMove(second.getId(), dir, true));
         return tankMoves;
     }
 
@@ -173,7 +161,6 @@ public class SingularityTank implements Algorithm {
                 .map(tank -> {
                     byte dir = getCommonDir(tank);
                     return new TankMove(tank.getId(), dir, shoot(tank, dir));
-//                    return new TankMove(tank.getId(), dir, true);
                 })
                 .collect(Collectors.toList());
     }
@@ -264,6 +251,9 @@ public class SingularityTank implements Algorithm {
         return upLeftBottomIndOpt.isPresent();
     }
 
+    /**
+     * Checks is some tanks have reached another side of map
+     */
     private void fillUpLastColumnTanks() {
         allTanks.forEach(tank -> {
             if (leftResp) {
@@ -277,13 +267,16 @@ public class SingularityTank implements Algorithm {
         });
     }
 
+    /**
+     * @param tanks last column tanks
+     * @return moves for last column tanks
+     */
     private List<TankMove> moveLastColumnTanks(List<Tank> tanks) {
         if (leftResp) {
             return tanks.stream()
                     .map(t -> {
                         byte dir = getLastColumnDir(t);
                         return new TankMove(t.getId(), dir, shoot(t, dir));
-//                        return new TankMove(t.getId(), dir, true);
 
                     })
                     .collect(Collectors.toList());
@@ -297,6 +290,10 @@ public class SingularityTank implements Algorithm {
         }
     }
 
+    /**
+     * @param tank one of last column tanks
+     * @return moving directory for last column tank
+     */
     private byte getLastColumnDir(Tank tank) {
         if (leftResp) {
             int nextY = tank.getY() + 1;
@@ -322,6 +319,7 @@ public class SingularityTank implements Algorithm {
     }
 
     private boolean killChicken(Tank tank) {
+        //TODO hardcode!!!
         if (leftResp) {
             if (tank.getY() == 33 && tank.getX() >= 58) {
                 return true;
@@ -334,45 +332,34 @@ public class SingularityTank implements Algorithm {
         return false;
     }
 
+    /**
+     * @param tank current tank
+     * @param dir moving directory
+     * @return whether should make a shot or not
+     */
     private boolean shoot(Tank tank, byte dir) {
         int x = tank.getX();
         int y = tank.getY();
-        boolean found;
+        boolean found = false;
         switch (dir) {
             case Direction.LEFT:
                 found = allTanks.stream()
-                        .filter(t -> t.getY() == y && t.getX() < x)
-                        .findAny().isPresent();
-                if (found) {
-                    return false;
-                }
+                        .anyMatch(t -> t.getY() == y && t.getX() < x);
                 break;
             case Direction.UP:
                 found = allTanks.stream()
-                        .filter(t -> t.getX() == x && t.getY() < y)
-                        .findAny().isPresent();
-                if (found) {
-                    return false;
-                }
+                        .anyMatch(t -> t.getX() == x && t.getY() < y);
                 break;
             case Direction.RIGHT:
                 found = allTanks.stream()
-                        .filter(t -> t.getY() == y && t.getX() > x)
-                        .findAny().isPresent();
-                if (found) {
-                    return false;
-                }
+                        .anyMatch(t -> t.getY() == y && t.getX() > x);
                 break;
             case Direction.DOWN:
                 found = allTanks.stream()
-                        .filter(t -> t.getX() == x && t.getY() > y)
-                        .findAny().isPresent();
-                if (found) {
-                    return false;
-                }
+                        .anyMatch(t -> t.getX() == x && t.getY() > y);
                 break;
         }
-        return true;
+        return !found;
     }
 
     // true, if upper bound exists
@@ -395,8 +382,12 @@ public class SingularityTank implements Algorithm {
         return true;
     }
 
+    /**
+     * @param tanks available tanks
+     * @return the first special tank to go alongside enemy's base
+     */
     private Tank getFirst(List<Tank> tanks) {
-        Comparator<? super Tank> comparator = getComparator();
+        Comparator<? super Tank> comparator = Comparator.comparingInt(Position::getY);
         Optional<Tank> tank;
         if (leftResp) {
             tank = tanks.stream().min(comparator);
@@ -407,7 +398,7 @@ public class SingularityTank implements Algorithm {
     }
 
     private Tank getSecond(List<Tank> tanks) {
-        Comparator<? super Tank> comparator = getComparator();
+        Comparator<? super Tank> comparator = Comparator.comparingInt(Position::getY);
         Optional<Tank> tank;
         if (leftResp) {
             tank = tanks.stream().max(comparator);
@@ -415,18 +406,6 @@ public class SingularityTank implements Algorithm {
             tank = tanks.stream().min(comparator);
         }
         return tank.get();
-    }
-
-    private Comparator<? super Tank> getComparator() {
-        return (Comparator<Tank>) (o1, o2) -> {
-            if (o1.getY() < o2.getY()) {
-                return -1;
-            }
-            if (o1.getY() > o2.getY()) {
-                return 1;
-            }
-            return 0;
-        };
     }
 
 }
