@@ -1,6 +1,8 @@
 package com.aci.student24.tanks;
 
 import com.aci.student24.api.tanks.Algorithm;
+import com.aci.student24.api.tanks.objects.Brick;
+import com.aci.student24.api.tanks.objects.Indestructible;
 import com.aci.student24.api.tanks.objects.Position;
 import com.aci.student24.api.tanks.objects.Tank;
 import com.aci.student24.api.tanks.state.Direction;
@@ -27,11 +29,13 @@ public class MiningTank implements Algorithm {
     private List<Position> positionsOfIndestructibles;
     private List<Position> positionsOfBricks;
     private List<Tank> allTanks;
+
     private Tank defender;
+    private Position enemy;
 
     // keep track of number of iterations of the game
     private int iter = 0;
-    private final int FIRST_ITER = 5;
+    private final int FIRST_ITER = 4;
 
     @Override
     public void setMyId(int id) {
@@ -42,33 +46,49 @@ public class MiningTank implements Algorithm {
     public List<TankMove> nextMoves(MapState mapState) {
         iter++;
 
-        // set size of current map
-        Size mapSize = mapState.getSize();
-        MAX_X = mapSize.getWidth();
-        MAX_Y = mapSize.getHeight();
-
         // get all our tanks
         List<Tank> tanks = mapState.getTanks(teamId);
         allTanks = new ArrayList<>(tanks);
 
         // find out where resp is & choose DEFENDER tank
         if (firstRun) {
-            leftResp = tanks.get(0).getX() < MAX_X / 2;
-            firstRun = false;
-            positionsOfIndestructibles = mapState.getIndestructibles()
-                    .stream()
-                    .map(Position::getPosition)
-                    .collect(Collectors.toList());
-            positionsOfBricks = mapState.getBricks()
-                    .stream()
-                    .map(Position::getPosition)
-                    .collect(Collectors.toList());
+            // set size of current map
+            Size mapSize = mapState.getSize();
+            MAX_X = mapSize.getWidth();
+            MAX_Y = mapSize.getHeight();
 
-            // choose DEFENDER tank to be the farthest from enemy's base
-            Position enemy = mapState.getBases()
+            // set position of enemy's base (chicken to kill)
+            enemy = mapState.getBases()
                     .stream()
                     .filter(b -> b.getTeamId() != teamId)
                     .findFirst().get().getPosition();
+
+            leftResp = tanks.get(0).getX() < MAX_X / 2;
+            firstRun = false;
+
+            // get indestructibles & check for null
+            List<Indestructible> indestructibles = mapState.getIndestructibles();
+            if (indestructibles == null) {
+                positionsOfIndestructibles = Collections.emptyList();
+            } else {
+                positionsOfIndestructibles = mapState.getIndestructibles()
+                        .stream()
+                        .map(Position::getPosition)
+                        .collect(Collectors.toList());
+            }
+
+            // get bricks & check for null
+            List<Brick> bricks = mapState.getBricks();
+            if (bricks == null) {
+                positionsOfBricks = Collections.emptyList();
+            } else {
+                positionsOfBricks = mapState.getBricks()
+                        .stream()
+                        .map(Position::getPosition)
+                        .collect(Collectors.toList());
+            }
+
+            // choose DEFENDER tank to be the farthest from enemy's base
             int enemyX = enemy.getX();
             int enemyY = enemy.getY();
 
@@ -79,7 +99,6 @@ public class MiningTank implements Algorithm {
             }).get();
         }
 
-        //TODO maybe change strategy for DEFENDER tank
         List<TankMove> resultingMoves = new ArrayList<>();
         allTanks.removeIf(t -> t.getId() == defender.getId());
         tanks.removeIf(t -> t.getId() == defender.getId());
@@ -114,11 +133,10 @@ public class MiningTank implements Algorithm {
     }
 
     private TankMove moveDefender(MapState mapState) {
-        //TODO defender strategy
-
         try {
-
-            List<Tank> enemies = mapState.getTanks().stream().filter(tank -> tank.getTeamId() != teamId)
+            List<Tank> enemies = mapState.getTanks()
+                    .stream()
+                    .filter(tank -> tank.getTeamId() != teamId)
                     .collect(Collectors.toList());
 
             int defenderX = defender.getX();
@@ -553,46 +571,49 @@ public class MiningTank implements Algorithm {
         }
         int x = tank.getX();
         int y = tank.getY();
-        boolean found = false;
+        List<Position> allies;
         switch (dir) {
             case Direction.LEFT:
-                found = allTanks.stream()
-                        .anyMatch(t -> t.getY() == y && t.getX() < x);
+                allies = allTanks.stream()
+                        .filter(t -> t.getY() == y && t.getX() < x)
+                        .collect(Collectors.toList());
                 break;
             case Direction.UP:
-                found = allTanks.stream()
-                        .anyMatch(t -> t.getX() == x && t.getY() < y);
+                allies = allTanks.stream()
+                        .filter(t -> t.getX() == x && t.getY() < y)
+                        .collect(Collectors.toList());
                 break;
             case Direction.RIGHT:
-                found = allTanks.stream()
-                        .anyMatch(t -> t.getY() == y && t.getX() > x);
+                allies = allTanks.stream()
+                        .filter(t -> t.getY() == y && t.getX() > x)
+                        .collect(Collectors.toList());
                 break;
             case Direction.DOWN:
-                found = allTanks.stream()
-                        .anyMatch(t -> t.getX() == x && t.getY() > y);
+                allies = allTanks.stream()
+                        .filter(t -> t.getX() == x && t.getY() > y)
+                        .collect(Collectors.toList());
                 break;
+            default:
+                allies = Collections.emptyList();
         }
-        return !found;
+        if (allies.isEmpty()) {
+            return true;
+        }
+        return allies.stream().anyMatch(p -> {
+            int enemyY = enemy.getY();
+            int pY = p.getY();
+            return enemyY >= pY && enemyY <= y || enemyY >= y && enemyY <= pY;
+        });
     }
 
     // true, if upper bound exists
     private boolean upperBound(int x, int y) {
-        for (int i = y - 1; i >= 0; i--) {
-            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
-                return false;
-            }
-        }
-        return true;
+        return positionsOfIndestructibles.contains(new Position(x, y));
     }
 
     // true, if lower bound exists
     private boolean lowerBound(int x, int y) {
-        for (int i = y + 1; i < MAX_Y; i++) {
-            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
-                return false;
-            }
-        }
-        return true;
+        return positionsOfIndestructibles.contains(new Position(x, y));
     }
 
     /**
