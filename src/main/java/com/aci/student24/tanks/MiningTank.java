@@ -5,6 +5,7 @@ import com.aci.student24.api.tanks.objects.Position;
 import com.aci.student24.api.tanks.objects.Tank;
 import com.aci.student24.api.tanks.state.Direction;
 import com.aci.student24.api.tanks.state.MapState;
+import com.aci.student24.api.tanks.state.Size;
 import com.aci.student24.api.tanks.state.TankMove;
 
 import java.util.*;
@@ -16,15 +17,15 @@ import java.util.stream.Collectors;
 public class MiningTank implements Algorithm {
 
     private int teamId;
-    private final int MAX_X = 64;
-    private final int MAX_Y = 36;
+    private int MAX_X;
+    private int MAX_Y;
+
     private boolean firstRun = true;
     private boolean leftResp = false;
     private List<Position> positionsOfIndestructibles;
     private List<Tank> allTanks;
     private Set<Integer> lastColumnTanksIds;
     private Tank defender;
-
 
     @Override
     public void setMyId(int id) {
@@ -33,6 +34,11 @@ public class MiningTank implements Algorithm {
 
     @Override
     public List<TankMove> nextMoves(MapState mapState) {
+        // set size of current map
+        Size mapSize = mapState.getSize();
+        MAX_X = mapSize.getWidth();
+        MAX_Y = mapSize.getHeight();
+
         // get all our tanks
         List<Tank> tanks = mapState.getTanks(teamId);
         allTanks = new ArrayList<>(tanks);
@@ -61,7 +67,7 @@ public class MiningTank implements Algorithm {
         List<TankMove> resultingMoves = new ArrayList<>();
         allTanks.removeIf(t -> t.getId() == defender.getId());
         tanks.removeIf(t -> t.getId() == defender.getId());
-        resultingMoves.add(new TankMove(defender.getId(), Direction.NO, true));
+        resultingMoves.add(moveDefender(mapState));
 
         fillUpLastColumnTanks();
         List<Tank> lastColumnTanks = allTanks.stream()
@@ -89,6 +95,11 @@ public class MiningTank implements Algorithm {
             resultingMoves.addAll(tankMovesCommon);
         }
         return resultingMoves;
+    }
+
+    private TankMove moveDefender(MapState mapState) {
+        //TODO defender strategy
+        return new TankMove(defender.getId(), Direction.NO, true);
     }
 
     private List<TankMove> moveSpecial(Tank first, Tank second) {
