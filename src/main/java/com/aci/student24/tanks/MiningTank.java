@@ -136,6 +136,7 @@ public class MiningTank implements Algorithm {
                     .stream()
                     .filter(tank -> tank.getTeamId() != teamId)
                     .collect(Collectors.toList());
+            System.out.println("SIZE: " + enemies.size());
 
             int defenderX = defender.getX();
             int defenderY = defender.getY();
@@ -175,7 +176,7 @@ public class MiningTank implements Algorithm {
                 }
             }
 
-            if (minDist < 12) {
+            if (minDist < 18) {
 
                 int finalNearestEnemyId = nearestEnemyId;
                 Tank nearestEnemy = enemies
@@ -504,7 +505,7 @@ public class MiningTank implements Algorithm {
     private List<Tank> getLastColumnTanks() {
         return allTanks.stream()
                 .filter(t -> t.getX() == enemy.getX()).
-                collect(Collectors.toList());
+                        collect(Collectors.toList());
     }
 
     /**
