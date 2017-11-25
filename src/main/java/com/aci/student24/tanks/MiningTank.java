@@ -35,7 +35,7 @@ public class MiningTank implements Algorithm {
 
     // keep track of number of iterations of the game
     private int iter = 0;
-    private final int FIRST_ITER = 4;
+    private final int FIRST_ITER = 7;
 
     @Override
     public void setMyId(int id) {
@@ -104,10 +104,7 @@ public class MiningTank implements Algorithm {
         tanks.removeIf(t -> t.getId() == defender.getId());
         resultingMoves.add(moveDefender(mapState));
 
-        Set<Integer> lastColumnTanksIds = fillUpLastColumnTanks();
-        List<Tank> lastColumnTanks = allTanks.stream()
-                .filter(t -> lastColumnTanksIds.contains(t.getId()))
-                .collect(Collectors.toList());
+        List<Tank> lastColumnTanks = getLastColumnTanks();
 
         if (!lastColumnTanks.isEmpty()) {
             tanks.removeAll(lastColumnTanks);
@@ -478,7 +475,6 @@ public class MiningTank implements Algorithm {
             // if there is no obstacle to the right
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
-                //TODO ??? && !lowerCorner(tank) upperCorner()..
             } else if (!lowerBound(nextX, y)) {
                 return Direction.DOWN;
             } else if (!upperBound(nextX, y)) {
@@ -512,20 +508,10 @@ public class MiningTank implements Algorithm {
     /**
      * Checks is some tanks have reached another side of map
      */
-    private Set<Integer> fillUpLastColumnTanks() {
-        Set<Integer> lastColumnTanksIds = new HashSet<>();
-        allTanks.forEach(tank -> {
-            int x = tank.getX();
-            if (leftResp) {
-                if (x == (MAX_X - 1) || x == (MAX_X - 2))
-                    lastColumnTanksIds.add(tank.getId());
-            } else {
-                if (x == 0 || x == 1) {
-                    lastColumnTanksIds.add(tank.getId());
-                }
-            }
-        });
-        return lastColumnTanksIds;
+    private List<Tank> getLastColumnTanks() {
+        return allTanks.stream()
+                .filter(t -> t.getX() == enemy.getX()).
+                collect(Collectors.toList());
     }
 
     /**
@@ -558,15 +544,9 @@ public class MiningTank implements Algorithm {
     private byte getLastColumnDir(Tank tank) {
         int x = tank.getX();
         int y = tank.getY();
-        int enemyX = enemy.getX();
         int enemyY = enemy.getY();
 
         if (leftResp) {
-            // check if tank and enemy's base have the same X coordinate
-            if (x != enemyX) {
-                return Direction.RIGHT;
-            }
-
             // find out right moving direction along Y axis
             int nextY;
             byte dir;
@@ -584,11 +564,6 @@ public class MiningTank implements Algorithm {
                 return Direction.LEFT;
             }
         } else {
-            // check if tank and enemy's base have the same X coordinate
-            if (x != enemyX) {
-                return Direction.LEFT;
-            }
-
             // find out right moving direction along Y axis
             int nextY;
             byte dir;
@@ -657,6 +632,9 @@ public class MiningTank implements Algorithm {
 
     // true, if upper bound exists
     private boolean upperBound(int x, int y) {
+        if (positionsOfIndestructibles.contains(new Position(x, y - 1))) {
+            return true;
+        }
         for (int i = y - 1; i >= 0; i--) {
             if (!positionsOfIndestructibles.contains(new Position(x, i))) {
                 return false;
@@ -667,6 +645,9 @@ public class MiningTank implements Algorithm {
 
     // true, if lower bound exists
     private boolean lowerBound(int x, int y) {
+        if (positionsOfIndestructibles.contains(new Position(x, y + 1))) {
+            return true;
+        }
         for (int i = y + 1; i < MAX_Y; i++) {
             if (!positionsOfIndestructibles.contains(new Position(x, i))) {
                 return false;
