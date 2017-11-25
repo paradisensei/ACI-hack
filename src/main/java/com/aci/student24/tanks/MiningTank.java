@@ -393,26 +393,27 @@ public class MiningTank implements Algorithm {
 
     private byte getFirstSpecialDir(Tank tank) {
         final int y = tank.getY();
+        final int x = tank.getX();
         if (leftResp) {
-            int nextX = tank.getX() + 1;
+            int nextX = x + 1;
             // if there is no obstacle in the straight direction (to the right)
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
-            } else if (!upperBound(nextX, y)) {
+            } else if (!upperBound(x, nextX, y)) {
                 return Direction.UP;
-            } else if (!lowerBound(nextX, y)) {
+            } else if (!lowerBound(x, nextX, y)) {
                 return Direction.DOWN;
             } else {
                 return Direction.LEFT;
             }
         } else {
-            int nextX = tank.getX() - 1;
+            int nextX = x - 1;
             // if there is no obstacle in the straight direction (to the left)
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!lowerBound(nextX, y)) {
+            } else if (!lowerBound(x, nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, y)) {
+            } else if (!upperBound(x, nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.RIGHT;
@@ -422,26 +423,27 @@ public class MiningTank implements Algorithm {
 
     private byte getSecondSpecialDir(Tank tank) {
         final int y = tank.getY();
+        final int x = tank.getX();
         if (leftResp) {
-            int nextX = tank.getX() + 1;
+            int nextX = x + 1;
             // if there is no obstacle in the straight direction (to the right)
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
-            } else if (!lowerBound(nextX, y)) {
+            } else if (!lowerBound(x, nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, y)) {
+            } else if (!upperBound(x, nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.LEFT;
             }
         } else {
-            int nextX = tank.getX() - 1;
+            int nextX = x - 1;
             // if there is no obstacle in the straight direction (to the left)
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!upperBound(nextX, y)) {
+            } else if (!upperBound(x, nextX, y)) {
                 return Direction.UP;
-            } else if (!lowerBound(nextX, y)) {
+            } else if (!lowerBound(x, nextX, y)) {
                 return Direction.DOWN;
             } else {
                 return Direction.RIGHT;
@@ -460,26 +462,27 @@ public class MiningTank implements Algorithm {
 
     private byte getCommonDir(Tank tank) {
         final int y = tank.getY();
+        final int x = tank.getX();
         if (leftResp) {
-            int nextX = tank.getX() + 1;
+            int nextX = x + 1;
             // if there is no obstacle to the right
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.RIGHT;
-            } else if (!lowerBound(nextX, y)) {
+            } else if (!lowerBound(x, nextX, y)) {
                 return Direction.DOWN;
-            } else if (!upperBound(nextX, y)) {
+            } else if (!upperBound(x, nextX, y)) {
                 return Direction.UP;
             } else {
                 return Direction.LEFT;
             }
         } else {
-            int nextX = tank.getX() - 1;
+            int nextX = x - 1;
             // if there is no obstacle to the right
             if (!straightObstacle(new Position(nextX, y))) {
                 return Direction.LEFT;
-            } else if (!upperBound(nextX, y)) {
+            } else if (!upperBound(x, nextX, y)) {
                 return Direction.UP;
-            } else if (!lowerBound(nextX, y)) {
+            } else if (!lowerBound(x, nextX, y)) {
                 return Direction.DOWN;
             } else {
                 return Direction.LEFT;
@@ -621,12 +624,12 @@ public class MiningTank implements Algorithm {
     }
 
     // true, if upper bound exists
-    private boolean upperBound(int x, int y) {
+    private boolean upperBound(int x, int nextX, int y) {
         if (positionsOfIndestructibles.contains(new Position(x, y - 1))) {
             return true;
         }
         for (int i = y - 1; i >= 0; i--) {
-            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
+            if (!positionsOfIndestructibles.contains(new Position(nextX, i))) {
                 return false;
             }
         }
@@ -634,12 +637,12 @@ public class MiningTank implements Algorithm {
     }
 
     // true, if lower bound exists
-    private boolean lowerBound(int x, int y) {
+    private boolean lowerBound(int x, int nextX, int y) {
         if (positionsOfIndestructibles.contains(new Position(x, y + 1))) {
             return true;
         }
         for (int i = y + 1; i < MAX_Y; i++) {
-            if (!positionsOfIndestructibles.contains(new Position(x, i))) {
+            if (!positionsOfIndestructibles.contains(new Position(nextX, i))) {
                 return false;
             }
         }
