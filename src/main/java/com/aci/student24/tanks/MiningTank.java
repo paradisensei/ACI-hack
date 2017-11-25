@@ -195,43 +195,41 @@ public class MiningTank implements Algorithm {
                     //if enemy higher
                     if (enemyY < defenderY) {
 
+                        //enemy is on the right
                         if (enemyX > defenderX) {
 
                             if (enemyDir == Direction.LEFT) {
-//                                if (Math.abs(defenderY - enemyY) > 1) {
                                 if (defender.getDir() != Direction.UP) {
-                                    return new TankMove(defender.getId(), Direction.UP, true);
+                                    return new TankMove(defender.getId(), Direction.UP, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
-//                                }
                             }
 
                             if (enemyDir == Direction.DOWN) {
                                 if (defender.getDir() != Direction.RIGHT) {
-                                    return new TankMove(defender.getId(), Direction.RIGHT, true);
+                                    return new TankMove(defender.getId(), Direction.RIGHT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
+                            //enemy is on the left
                         } else {
 
                             if (enemyDir == Direction.RIGHT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.UP) {
-                                        return new TankMove(defender.getId(), Direction.UP, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.UP) {
+                                    return new TankMove(defender.getId(), Direction.UP, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                             if (enemyDir == Direction.DOWN) {
                                 if (defender.getDir() != Direction.LEFT) {
-                                    return new TankMove(defender.getId(), Direction.LEFT, true);
+                                    return new TankMove(defender.getId(), Direction.LEFT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
@@ -243,47 +241,43 @@ public class MiningTank implements Algorithm {
                         if (enemyX > defenderX) {
 
                             if (enemyDir == Direction.LEFT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.DOWN) {
-                                        return new TankMove(defender.getId(), Direction.DOWN, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.DOWN) {
+                                    return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                             if (enemyDir == Direction.UP) {
                                 if (defender.getDir() != Direction.RIGHT) {
-                                    return new TankMove(defender.getId(), Direction.RIGHT, true);
+                                    return new TankMove(defender.getId(), Direction.RIGHT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                         } else {
 
                             if (enemyDir == Direction.RIGHT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.DOWN) {
-                                        return new TankMove(defender.getId(), Direction.DOWN, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.DOWN) {
+                                    return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                             if (enemyDir == Direction.UP) {
                                 if (defender.getDir() != Direction.LEFT) {
-                                    return new TankMove(defender.getId(), Direction.LEFT, true);
+                                    return new TankMove(defender.getId(), Direction.LEFT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                         }
                         //on the same line
                     } else {
-                        return new TankMove(defender.getId(), Direction.DOWN, true);
+                        return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
                     }
                 } else {
                     //if enemy higher
@@ -292,40 +286,37 @@ public class MiningTank implements Algorithm {
                         if (enemyX < defenderX) {
 
                             if (enemyDir == Direction.RIGHT) {
-                                if (Math.abs(enemyY - defenderY) > 1) {
-                                    if (defender.getDir() != Direction.UP) {
-                                        return new TankMove(defender.getId(), Direction.UP, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.UP) {
+                                    return new TankMove(defender.getId(), Direction.UP, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                             if (enemyDir == Direction.DOWN) {
                                 if (defender.getDir() != Direction.LEFT) {
-                                    return new TankMove(defender.getId(), Direction.LEFT, true);
+                                    return new TankMove(defender.getId(), Direction.LEFT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                         } else {
 
                             if (enemyDir == Direction.LEFT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.UP) {
-                                        return new TankMove(defender.getId(), Direction.UP, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.UP) {
+                                    return new TankMove(defender.getId(), Direction.UP, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
+
                             }
 
                             if (enemyDir == Direction.DOWN) {
                                 if (defender.getDir() != Direction.RIGHT) {
-                                    return new TankMove(defender.getId(), Direction.RIGHT, true);
+                                    return new TankMove(defender.getId(), Direction.RIGHT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
@@ -337,47 +328,45 @@ public class MiningTank implements Algorithm {
                         if (enemyX < defenderX) {
 
                             if (enemyDir == Direction.RIGHT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.DOWN) {
-                                        return new TankMove(defender.getId(), Direction.DOWN, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.DOWN) {
+                                    return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
+
                                 }
                             }
 
                             if (enemyDir == Direction.UP) {
                                 if (defender.getDir() != Direction.LEFT) {
-                                    return new TankMove(defender.getId(), Direction.LEFT, true);
+                                    return new TankMove(defender.getId(), Direction.LEFT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                         } else {
 
                             if (enemyDir == Direction.LEFT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.DOWN) {
-                                        return new TankMove(defender.getId(), Direction.DOWN, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+                                if (defender.getDir() != Direction.DOWN) {
+                                    return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
+
                             }
 
                             if (enemyDir == Direction.UP) {
                                 if (defender.getDir() != Direction.RIGHT) {
-                                    return new TankMove(defender.getId(), Direction.RIGHT, true);
+                                    return new TankMove(defender.getId(), Direction.RIGHT, shoot(defender, defender.getDir()));
                                 } else {
-                                    return new TankMove(defender.getId(), Direction.NO, true);
+                                    return new TankMove(defender.getId(), Direction.NO, shoot(defender, defender.getDir()));
                                 }
                             }
 
                         }
                         //on the same line
                     } else {
-                        return new TankMove(defender.getId(), Direction.DOWN, true);
+                        return new TankMove(defender.getId(), Direction.DOWN, shoot(defender, defender.getDir()));
                     }
                 }
             } else {
