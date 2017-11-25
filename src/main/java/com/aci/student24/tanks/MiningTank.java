@@ -135,7 +135,9 @@ public class MiningTank implements Algorithm {
     private TankMove moveDefender(MapState mapState) {
         try {
 
-            List<Tank> enemies = mapState.getTanks().stream().filter(tank -> tank.getTeamId() != teamId)
+            List<Tank> enemies = mapState.getTanks()
+                    .stream()
+                    .filter(tank -> tank.getTeamId() != teamId)
                     .collect(Collectors.toList());
 
             int defenderX = defender.getX();
@@ -182,8 +184,7 @@ public class MiningTank implements Algorithm {
                 Tank nearestEnemy = enemies
                         .stream()
                         .filter(tank -> tank.getId() == finalNearestEnemyId)
-                        .collect(Collectors.toList())
-                        .get(0);
+                        .findAny().get();
 
                 int enemyX = nearestEnemy.getX();
                 int enemyY = nearestEnemy.getY();
@@ -197,13 +198,13 @@ public class MiningTank implements Algorithm {
                         if (enemyX > defenderX) {
 
                             if (enemyDir == Direction.LEFT) {
-                                if (Math.abs(defenderY - enemyY) > 1) {
-                                    if (defender.getDir() != Direction.UP) {
-                                        return new TankMove(defender.getId(), Direction.UP, true);
-                                    } else {
-                                        return new TankMove(defender.getId(), Direction.NO, true);
-                                    }
+//                                if (Math.abs(defenderY - enemyY) > 1) {
+                                if (defender.getDir() != Direction.UP) {
+                                    return new TankMove(defender.getId(), Direction.UP, true);
+                                } else {
+                                    return new TankMove(defender.getId(), Direction.NO, true);
                                 }
+//                                }
                             }
 
                             if (enemyDir == Direction.DOWN) {
