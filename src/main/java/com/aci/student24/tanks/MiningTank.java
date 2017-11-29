@@ -32,6 +32,7 @@ public class MiningTank implements Algorithm {
 
     private Tank defender;
     private Position enemy;
+    private Position base;
 
     // keep track of number of iterations of the game
     private int iter = 0;
@@ -62,6 +63,15 @@ public class MiningTank implements Algorithm {
                     .stream()
                     .filter(b -> b.getTeamId() != teamId)
                     .findFirst().get().getPosition();
+
+            try {
+                // set position of our base
+                base = mapState.getBases()
+                        .stream()
+                        .filter(b -> b.getTeamId() == teamId)
+                        .findFirst().get().getPosition();
+            } catch (Exception ignored) {
+            }
 
             leftResp = tanks.get(0).getX() < MAX_X / 2;
             firstRun = false;
@@ -493,6 +503,9 @@ public class MiningTank implements Algorithm {
 
     private boolean straightObstacle(Position position) {
         boolean flag = positionsOfIndestructibles.contains(position);
+        if (base != null) {
+            flag = flag || position.equals(base);
+        }
         if (iter < FIRST_ITER) {
             flag = flag || positionsOfBricks.contains(position);
         }
@@ -585,6 +598,9 @@ public class MiningTank implements Algorithm {
     private boolean shoot(Tank tank, byte dir) {
         // don`t shoot in the start of the game
         if (iter < FIRST_ITER) {
+            return false;
+        }
+        if (base != null && abs(base.getPosition().getX() - tank.getX()) <= 1) {
             return false;
         }
         int x = tank.getX();
